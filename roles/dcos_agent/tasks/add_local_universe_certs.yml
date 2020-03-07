@@ -1,0 +1,24 @@
+- name: Create directory for certificate
+  file:
+    path: /etc/docker/certs.d/master.mesos:5000
+    state: directory
+
+- name: Download the certificate
+  get_url:
+    url: http://master.mesos:8082/certs/domain.crt
+    dest: /etc/docker/certs.d/master.mesos:5000/ca.crt
+
+- name: Create the certs dir if it doesn't exist
+  file: 
+    path: /var/lib/dcos/pki/tls/certs/
+    state: directory
+
+- name: Copy the Docker ca.crt to the dcos certs directory
+  get_url:
+    url: http://master.mesos:8082/certs/domain.crt
+    dest: /var/lib/dcos/pki/tls/certs/docker-registry-ca.crt
+
+- name: Generate a hash and symlink
+  shell: ln -s /var/lib/dcos/pki/tls/certs/docker-registry-ca.crt /var/lib/dcos/pki/tls/certs/$(openssl x509 -hash -noout -in docker-registry-ca.crt).0
+  args:
+    chdir: /var/lib/dcos/pki/tls/certs/
